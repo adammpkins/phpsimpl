@@ -29,4 +29,13 @@ RUN curl -sS https://getcomposer.org/download/2.2.24/composer.phar -o /usr/local
 
 WORKDIR /app
 
+# Copy composer files for dependency installation
+COPY composer.json composer.lock* /app/
+
+# Copy lib directory for autoload scanning
+COPY lib/ /app/lib/
+
+# Install dependencies (no-dev to avoid PHP 8 packages like PEST)
+RUN composer install --no-dev --ignore-platform-reqs --no-interaction
+
 CMD ["php", "-v"]
