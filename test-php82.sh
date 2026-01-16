@@ -20,8 +20,8 @@ echo ""
 echo "Running PEST tests in PHP 8.2 container..."
 echo ""
 
-# Run tests in PHP 8.2 container
-docker-compose exec php82 ./vendor/bin/pest "$@"
+# Run tests in PHP 8.2 container with correct DB connection for container
+docker-compose exec -e DB_HOST=mariadb -e DB_PORT=3306 php82 ./vendor/bin/pest "$@"
 
 echo ""
 echo "=================================================="

@@ -55,13 +55,21 @@ function loadEnv(): void
                 continue;
             }
             list($name, $value) = explode('=', $line, 2);
-            $_ENV[trim($name)] = trim($value);
-            $_SERVER[trim($name)] = trim($value);
+            $name = trim($name);
+            $value = trim($value);
+            
+            // Respect runtime environment variables (e.g. from docker-compose exec -e)
+            $existingValue = getenv($name);
+            if ($existingValue !== false) {
+                $value = $existingValue;
+            }
+            
+            $_ENV[$name] = $value;
+            $_SERVER[$name] = $value;
             
             // Also define as constants for legacy code
-            $constantName = trim($name);
-            if (!defined($constantName)) {
-                define($constantName, trim($value));
+            if (!defined($name)) {
+                define($name, $value);
             }
         }
     }
