@@ -30,7 +30,8 @@ echo ""
 
 docker-compose exec php55 php -v
 echo ""
-docker-compose exec php55 ./vendor/bin/pest --colors=always "$@" || echo "⚠️  Some PHP 5.5 tests failed"
+echo "Running syntax validation (PEST requires PHP 7.3+)..."
+docker-compose exec php55 find lib/ -name "*.php" -exec php -l {} \; || echo "⚠️  PHP 5.5 syntax errors found"
 
 echo ""
 echo "======================================================================="

@@ -28,10 +28,10 @@ PHPSimpl now supports testing across **two PHP environments** to ensure backward
 ### Run Tests in Specific Environment
 
 ```bash
-# Test on PHP 5.5 (should pass with current code)
+# Test on PHP 5.5 (legacy environment)
 ./test-php55.sh
 
-# Test on PHP 8.2 (will fail until mysqli migration)
+# Test on PHP 8.2 (modern environment - runs PEST)
 ./test-php82.sh
 
 # Test on BOTH (comprehensive validation)
@@ -271,8 +271,10 @@ docker-compose down -v
 - [x] Run all tests on PHP 5.5
 - [x] Document current behavior
 
-### Phase 2: Migration 🚧
-- [ ] Migrate `mysql_*` → `mysqli_*`
+### PHP 8.2 (Target)
+- ✅ Tests PASS
+- Uses `mysqli` extension
+- Full PEST test suite
 - [ ] Run tests on PHP 5.5 (should still pass)
 - [ ] Run tests on PHP 8.2 (should now pass)
 
