@@ -61,10 +61,18 @@ class DB extends Simpl {
      * @param string $database
      * @return bool
      */
-    public function Connect($server=DB_HOST, $username=DB_USER, $password=DB_PASS, $database=DB_DEFAULT){
+    public function Connect($server=DB_HOST, $username=DB_USER, $password=DB_PASS, $database=DB_DEFAULT, $port=null){
         // Save the config till we are ready to connect
-        if (!$this->connected)
-            $this->config = array($server,$username,$password,$database);
+        if ($this->connected)
+            return true;
+
+        if ($port === null && defined('DB_PORT'))
+            $port = DB_PORT;
+        
+        if ($port === null)
+            $port = 3306;
+
+        $this->config = array($server,$username,$password,$database,$port);
 
         return true;
     }
@@ -82,16 +90,17 @@ class DB extends Simpl {
         if (is_array($this->config)){
             // Set all the local variables
             $this->database = $this->config[3];
+            $port = (isset($this->config[4]) ? $this->config[4] : 3306);
 
             // Connect to MySQL using mysqli (compatible with PHP 5.0+)
-            $this->db_link = @mysqli_connect($this->config[0], $this->config[1], $this->config[2], $this->database);
+            $this->db_link = @\mysqli_connect($this->config[0], $this->config[1], $this->config[2], $this->database, $port);
 
             if ($this->db_link){
                 // Update the state
                 $this->connected = true;
 
                 // If there is a DB Defined select it (mysqli_connect already selects it, but keep for explicit changes)
-                if ($this->database != NULL && !@mysqli_select_db($this->db_link, $this->database)){
+                if ($this->database != NULL && !@\mysqli_select_db($this->db_link, $this->database)){
                     return false;
                 }
 
@@ -160,7 +169,7 @@ class DB extends Simpl {
             Pre($this->Nice());
         }
         // Do the Query
-        $result = mysqli_query($this->db_link, $query) or $this->Error($query, mysqli_errno($this->db_link), mysqli_error($this->db_link));
+        $result = \mysqli_query($this->db_link, $query) or $this->Error($query, \mysqli_errno($this->db_link), \mysqli_error($this->db_link));
 
         // Increment the query counter
         $this->query_count++;
@@ -185,7 +194,7 @@ class DB extends Simpl {
             $this->results = array();
 
             // Create the results array
-            while($info = mysqli_fetch_array($result, MYSQLI_ASSOC))
+            while($info = \mysqli_fetch_array($result, MYSQLI_ASSOC))
                 $this->results[] = $info;
 
             // Serialize it and save it
@@ -275,7 +284,7 @@ class DB extends Simpl {
     public function Close(){
         // If Connected
         if ($this->connected){
-            return @mysqli_close($this->db_link);
+            return @\mysqli_close($this->db_link);
         }
 
         return true;
@@ -292,7 +301,7 @@ class DB extends Simpl {
         $this->DbConnect();
 
         // If there is a connection
-        if ($this->db_link && @mysqli_select_db($this->db_link, $database)){
+        if ($this->db_link && @\mysqli_select_db($this->db_link, $database)){
             // Increment the query counter
             $this->query_count++;
 
@@ -335,7 +344,7 @@ class DB extends Simpl {
         if (QUERY_CACHE && is_array($this->results))
             return array_shift($this->results);
         else
-            return mysqli_fetch_array($result, MYSQLI_ASSOC);
+            return \mysqli_fetch_array($result, MYSQLI_ASSOC);
     }
 
     /**
@@ -349,7 +358,7 @@ class DB extends Simpl {
         if (QUERY_CACHE && is_array($result)){
             return count($this->results);
         }else{
-            return mysqli_num_rows($result);
+            return \mysqli_num_rows($result);
         }
     }
 
@@ -359,7 +368,7 @@ class DB extends Simpl {
      * @return int
      */
     public function RowsAffected() {
-        return mysqli_affected_rows($this->db_link);
+        return \mysqli_affected_rows($this->db_link);
     }
 
     /**
@@ -368,7 +377,7 @@ class DB extends Simpl {
      * @return int
      */
     public function InsertID() {
-        return mysqli_insert_id($this->db_link);
+        return \mysqli_insert_id($this->db_link);
     }
 
     /**
@@ -378,7 +387,7 @@ class DB extends Simpl {
      * @return bool
      */
     public function FreeResult($result) {
-        return mysqli_free_result($result);
+        return \mysqli_free_result($result);
     }
 
     /**
@@ -388,7 +397,7 @@ class DB extends Simpl {
      * @return object
      */
     public function FetchField($result) {
-        return mysqli_fetch_field($result);
+        return \mysqli_fetch_field($result);
     }
 
     /**
@@ -400,7 +409,7 @@ class DB extends Simpl {
      */
     public function FieldLength($result,$field) {
         // mysqli doesn't have mysql_field_len, use mysqli_fetch_field_direct instead
-        $fieldInfo = mysqli_fetch_field_direct($result, $field);
+        $fieldInfo = \mysqli_fetch_field_direct($result, $field);
         return $fieldInfo ? $fieldInfo->length : 0;
     }
 
@@ -434,7 +443,7 @@ class DB extends Simpl {
         $this->DbConnect();
 
         // Escape the values from SQL injection
-        return (is_numeric($string))?addslashes($string):mysqli_real_escape_string($this->db_link, $string);
+        return (is_numeric($string))?addslashes($string):\mysqli_real_escape_string($this->db_link, $string);
     }
 
     /**
