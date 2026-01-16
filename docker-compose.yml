@@ -26,12 +26,13 @@ services:
   # PHP 5.5 Environment (Current Production - with mysql_* extension)
   php55:
     build:
-      context: ./docker/php55
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: docker/php55/Dockerfile
     container_name: phpsimpl_php55
     working_dir: /app
     volumes:
       - .:/app
+      - /app/vendor
     depends_on:
       - mariadb
     environment:
