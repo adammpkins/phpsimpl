@@ -35,10 +35,13 @@ Now that we have a stable base, we should fix the bugs identified by the test su
 2.  **Fix Validation:** Correct the phone regex in `lib/validate.php`.
 3.  **Fix Helper Functions:** Correct the `a()` function logic in `lib/functions.php`.
 
-### Expansion
-1.  **Add `Session` Tests:** The `Session` class is currently untested and likely contains similar legacy issues.
-2.  **Add `File/Upload` Tests:** Ensure file uploading works in the Docker environments.
-3.  **CI/CD Pipeline:** Create a GitHub Actions workflow to automatically run these tests (using the scripts we created) on every push.
+### 4. Test Expansion & Modernization
+Expanded the test suite to cover remaining core components on PHP 8.2:
+- **Session Tests:** Added unit tests for `Simpl\Session` using Mockery to simulate database interactions.
+- **File Tests:** Added unit tests for `Simpl\File`, covering filesystem operations safely.
+- **CI/CD:** Added GitHub Actions workflow (`.github/workflows/ci.yml`) to verify tests on every push.
+- **[FIXED] PHP 8 Compatibility:** Identified and fixed PHP 4-style constructors in `File` and `Folder` classes which are deprecated/removed in PHP 8.
+- **[FIXED] Strict Typing:** Fixed `File::Delete()` signature to match parent `Folder::Delete()` to satisfy PHP strict inheritance rules.
 
 ## 🛠️ Developer Usage via Docker
 
