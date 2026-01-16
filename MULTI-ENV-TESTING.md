@@ -126,12 +126,15 @@ docker-compose exec php82 bash
 docker-compose exec php55 php -v
 docker-compose exec php82 php -v
 
-# Run specific test file
-docker-compose exec php55 ./vendor/bin/pest tests/Unit/DBTest.php
+# Run PEST tests (PHP 8.2 only - PEST requires PHP 7.3+)
+docker-compose exec php82 ./vendor/bin/pest tests/Unit/DBTest.php
 docker-compose exec php82 ./vendor/bin/pest tests/Feature/DatabaseTest.php
 
+# PHP 5.5 syntax validation (smoke test)
+docker-compose exec php55 php -l lib/db.php
+
 # Interactive shell
-docker-compose exec php55 bash
+docker-compose exec php82 bash
 root@container:/app# ./vendor/bin/pest
 ```
 

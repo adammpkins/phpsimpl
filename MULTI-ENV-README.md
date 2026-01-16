@@ -56,8 +56,11 @@ docker-compose exec php55 bash
 # Access PHP 8.2 container
 docker-compose exec php82 bash
 
-# Run specific tests
-docker-compose exec php55 ./vendor/bin/pest tests/Unit
+# Run PEST tests (PHP 8.2 only - PEST requires PHP 7.3+)
+docker-compose exec php82 ./vendor/bin/pest tests/Unit
+
+# PHP 5.5 syntax validation
+docker-compose exec php55 php -l lib/db.php
 ```
 
 ## 🎯 Migration Workflow
