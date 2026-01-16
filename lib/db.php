@@ -5,6 +5,9 @@
  *
  * Used to interact with the database in a sane manner
  *
+ * MIGRATION NOTE: Updated from mysql_* to mysqli_* for PHP 7+ compatibility
+ * mysqli is available in PHP 5.0+ so this maintains backward compatibility
+ *
  * @author Nick DeNardis <nick.denardis@gmail.com>
  * @link http://code.google.com/p/phpsimpl/
  */
@@ -80,15 +83,15 @@ class DB extends Simpl {
             // Set all the local variables
             $this->database = $this->config[3];
 
-            // Connect to MySQL
-            $this->db_link = @mysql_connect($this->config[0], $this->config[1], $this->config[2], true);
+            // Connect to MySQL using mysqli (compatible with PHP 5.0+)
+            $this->db_link = @mysqli_connect($this->config[0], $this->config[1], $this->config[2], $this->database);
 
             if ($this->db_link){
                 // Update the state
                 $this->connected = true;
 
-                // If there is a DB Defined select it
-                if ($this->database != NULL && !@mysql_select_db($this->database, $this->db_link)){
+                // If there is a DB Defined select it (mysqli_connect already selects it, but keep for explicit changes)
+                if ($this->database != NULL && !@mysqli_select_db($this->db_link, $this->database)){
                     return false;
                 }
 
@@ -157,7 +160,7 @@ class DB extends Simpl {
             Pre($this->Nice());
         }
         // Do the Query
-        $result = mysql_query($query, $this->db_link) or $this->Error($query, mysql_errno(), mysql_error());
+        $result = mysqli_query($this->db_link, $query) or $this->Error($query, mysqli_errno($this->db_link), mysqli_error($this->db_link));
 
         // Increment the query counter
         $this->query_count++;
@@ -182,7 +185,7 @@ class DB extends Simpl {
             $this->results = array();
 
             // Create the results array
-            while($info = mysql_fetch_array($result, MYSQL_ASSOC))
+            while($info = mysqli_fetch_array($result, MYSQLI_ASSOC))
                 $this->results[] = $info;
 
             // Serialize it and save it
@@ -272,7 +275,7 @@ class DB extends Simpl {
     public function Close(){
         // If Connected
         if ($this->connected){
-            return @mysql_close($this->db_link);
+            return @mysqli_close($this->db_link);
         }
 
         return true;
@@ -289,7 +292,7 @@ class DB extends Simpl {
         $this->DbConnect();
 
         // If there is a connection
-        if ($this->db_link && @mysql_select_db($database)){
+        if ($this->db_link && @mysqli_select_db($this->db_link, $database)){
             // Increment the query counter
             $this->query_count++;
 
@@ -332,7 +335,7 @@ class DB extends Simpl {
         if (QUERY_CACHE && is_array($this->results))
             return array_shift($this->results);
         else
-            return mysql_fetch_array($result, MYSQL_ASSOC);
+            return mysqli_fetch_array($result, MYSQLI_ASSOC);
     }
 
     /**
@@ -346,7 +349,7 @@ class DB extends Simpl {
         if (QUERY_CACHE && is_array($result)){
             return count($this->results);
         }else{
-            return mysql_num_rows($result);
+            return mysqli_num_rows($result);
         }
     }
 
@@ -356,7 +359,7 @@ class DB extends Simpl {
      * @return int
      */
     public function RowsAffected() {
-        return mysql_affected_rows($this->db_link);
+        return mysqli_affected_rows($this->db_link);
     }
 
     /**
@@ -365,7 +368,7 @@ class DB extends Simpl {
      * @return int
      */
     public function InsertID() {
-        return mysql_insert_id();
+        return mysqli_insert_id($this->db_link);
     }
 
     /**
@@ -375,7 +378,7 @@ class DB extends Simpl {
      * @return bool
      */
     public function FreeResult($result) {
-        return mysql_free_result($result);
+        return mysqli_free_result($result);
     }
 
     /**
@@ -385,7 +388,7 @@ class DB extends Simpl {
      * @return object
      */
     public function FetchField($result) {
-        return mysql_fetch_field($result);
+        return mysqli_fetch_field($result);
     }
 
     /**
@@ -396,7 +399,9 @@ class DB extends Simpl {
      * @return object
      */
     public function FieldLength($result,$field) {
-        return mysql_field_len($result, $field);
+        // mysqli doesn't have mysql_field_len, use mysqli_fetch_field_direct instead
+        $fieldInfo = mysqli_fetch_field_direct($result, $field);
+        return $fieldInfo ? $fieldInfo->length : 0;
     }
 
     /**
@@ -429,7 +434,7 @@ class DB extends Simpl {
         $this->DbConnect();
 
         // Escape the values from SQL injection
-        return (is_numeric($string))?addslashes($string):mysql_real_escape_string($string);
+        return (is_numeric($string))?addslashes($string):mysqli_real_escape_string($this->db_link, $string);
     }
 
     /**
