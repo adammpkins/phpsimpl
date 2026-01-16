@@ -2,7 +2,7 @@
 vendor
 composer.lock
 .env
-.env.testing
+
 .phpunit.result.cache
 .pest/
 cache/
